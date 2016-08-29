@@ -1,0 +1,28 @@
+{
+  "name": "parse-rss",
+  "version": "1.0.0",
+  "description": "feedparser wrapper",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/AudienseCo/node-parse-rss.git"
+  },
+  "keywords": [
+    "rss",
+    "feed",
+    "parser"
+  ],
+  "author": "",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/AudienseCo/node-parse-rss/issues"
+  },
+  "homepage": "https://github.com/AudienseCo/node-parse-rss#readme",
+  "dependencies": {
+    "feedparser": "^1.1.4",
+    "request": "^2.74.0"
+  }
+}
