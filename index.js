@@ -20,7 +20,7 @@ module.exports = function fetch(url, callback) {
   });
 
   feedparser.on('error', _raiseError);
-  feedparser.on('end', function() { callback(null, items); });
+  feedparser.on('end', function() { if(!errorRaised) callback(null, items); });
   feedparser.on('readable', function() {
     var post;
     while (post = this.read()) {
