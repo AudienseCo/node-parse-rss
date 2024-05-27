@@ -22,7 +22,7 @@
   },
   "homepage": "https://github.com/AudienseCo/node-parse-rss#readme",
   "dependencies": {
-    "feedparser": "^1.1.4",
-    "request": "^2.74.0"
+    "axios": "^1.7.2",
+    "feedparser": "^1.1.4"
   }
 }
