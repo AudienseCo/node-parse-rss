@@ -1,41 +1,53 @@
 var FeedParser = require('feedparser');
-var request = require('request');
+var axios = require('axios');
+
+
 
 module.exports = function fetch(url, callback) {
-  var req = request(url);
-  var feedparser = new FeedParser();
-  var items = [];
-  var errorRaised = false;
-
-  req.setHeader('user-agent', 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_8_5) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/31.0.1650.63 Safari/537.36');
-  req.setHeader('accept', 'text/html,application/xhtml+xml');
-
-  req.on('error', _raiseError);
-  req.on('response', function(res) {
-    if (res.statusCode != 200) return this.emit('error', new Error('Bad status code'));
-    var encoding = res.headers['content-encoding'] || 'identity';
-    var charset = getParams(res.headers['content-type'] || '').charset;
-    res = maybeDecompress(res, encoding);
-    res.pipe(feedparser);
-  });
-
-  feedparser.on('error', _raiseError);
-  feedparser.on('end', function() { if(!errorRaised) callback(null, items); });
-  feedparser.on('readable', function() {
-    var post;
-    while (post = this.read()) {
-      items.push(post);
+  
+  
+  const feedparser = new FeedParser();
+  axios.get(url, {
+    responseType: 'stream',
+    headers: {
+      'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_8_5) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/31.0.1650.63 Safari/537.36',
+      'Accept': 'text/html,application/xhtml+xml'
     }
-  });
+  }).then(response => {
+    if (response.status !== 200) {
+      throw new Error('Bad status code');
+    }
 
-  function _raiseError(error) {
-    if (!errorRaised) callback(error);
-    errorRaised = true;
-  }
+    const items = [];
+    let errorRaised = false;
+    var encoding = response.headers['Content-Encoding'] || 'identity';
+    const responseData = response.data
+    const responseDecompress = maybeDecompress(responseData, encoding)
+    const responseParsed = responseDecompress.pipe(feedparser)
+    
+    responseParsed.on('error', _raiseError);
+
+    responseParsed.on('end', function() {
+      if (!errorRaised) callback(null, items);
+    });
+    responseParsed.on('data', function(chunck) {
+        items.push(chunck);
+    });
+
+    function _raiseError(error) {
+      if (!errorRaised) {
+        errorRaised = true;
+        callback(error);
+      }
+    }
+  }).catch(error => {
+    callback(error);
+  });
 };
 
 
 function maybeDecompress (res, encoding) {
+
   var decompress;
   if (encoding.match(/\bdeflate\b/)) {
     decompress = zlib.createInflate();
@@ -44,15 +56,3 @@ function maybeDecompress (res, encoding) {
   }
   return decompress ? res.pipe(decompress) : res;
 }
-
-function getParams(str) {
-  var params = str.split(';').reduce(function (params, param) {
-    var parts = param.split('=').map(function (part) { return part.trim(); });
-    if (parts.length === 2) {
-      params[parts[0]] = parts[1];
-    }
-    return params;
-  }, {});
-  return params;
-}
-
